@@ -1,0 +1,17 @@
+{
+  "name": "github-readme-medium",
+  "version": "1.0.0",
+  "description": "A vercel api implementation to fetch latest medium posts.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "request": "^2.88.2"
+  }
+}
