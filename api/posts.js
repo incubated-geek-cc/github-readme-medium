@@ -33,7 +33,7 @@ function convertDataURIToBinary(dataURI) {
 const emptyImageUrl='data:image/png;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
 const emptyBinaryArray=convertDataURIToBinary(emptyImageUrl);
 
-async function getArticle(post) {
+async function getArticle(post,articleIndex) {
   	let title=post["title"];
 
     let pubDate=post["published"];
@@ -79,7 +79,7 @@ async function getArticle(post) {
   	
   	const resizedResponse = (() => {
 	  	return new Promise((resolve, reject) => {
-	  		var localFilepath=path.join(__dirname, "../resource", 'temp.png');
+	  		var localFilepath=path.join(__dirname, "../resource", `temp-${articleIndex}.png`);
 	  		var writeStream = fs.createWriteStream(localFilepath);
 	  		request.get(resizedThumbnail)
 	  		.on('error', function(_err) {
@@ -170,7 +170,7 @@ router.get("/medium/@:username/:index", async(req, res) => {
 		const posts=data["items"];
 	    const post=posts[articleIndex];
 	    
-	    const svgStr=await getArticle(post);
+	    const svgStr=await getArticle(post,articleIndex);
 	    // console.log(svgStr);
 	    res.set("Content-Type", "image/svg+xml");
 	    res.status(200).send(svgStr);
