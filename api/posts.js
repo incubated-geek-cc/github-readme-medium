@@ -37,7 +37,7 @@ async function getArticle(post,articleIndex) {
   	let title=post["title"];
 
     let pubDate=post["published"];
-    const d = new Date(pubDate);
+    let d = new Date(pubDate);
     let displayPubDate=formatPubDate(d);
 
     let link=post["link"];
@@ -48,16 +48,16 @@ async function getArticle(post,articleIndex) {
 	let startPos=content.indexOf(startMarker)+startMarker.length;
 	let endMarker=`</p><p class="medium-feed-link">`;
 	let endPos=content.indexOf(endMarker);
-    const subtitle=content.slice(startPos,endPos);
+    let subtitle=content.slice(startPos,endPos);
 
     startMarker='<img src="';
 	startPos=content.indexOf(startMarker)+startMarker.length;
 	endMarker='" width="';
 	endPos=content.indexOf(endMarker);
-	const thumbnail=content.slice(startPos,endPos);
+	let thumbnail=content.slice(startPos,endPos);
 
 	
-  	const thumbnailResponse = ((reqOptions) => {
+  	let thumbnailResponse = ((reqOptions) => {
   		return new Promise((resolve, reject) => {
 	  		request(reqOptions, (_err, _res, _body) => {
 		  		if (_err) {
@@ -72,12 +72,12 @@ async function getArticle(post,articleIndex) {
       	url: thumbnail,
       	method: "GET"
   	};
-  	var resizedThumbnail=await thumbnailResponse(reqOptions);
+  	let resizedThumbnail=await thumbnailResponse(reqOptions);
   	resizedThumbnail=resizedThumbnail.request.href;
   	console.log(resizedThumbnail);
 
   	
-  	const resizedResponse = (() => {
+  	let resizedResponse = (() => {
 	  	return new Promise((resolve, reject) => {
 	  		var localFilepath=path.join(__dirname, "../resource", `temp-${articleIndex}.png`);
 	  		var writeStream = fs.createWriteStream(localFilepath);
@@ -90,11 +90,11 @@ async function getArticle(post,articleIndex) {
   			resolve(localFilepath);
 		});
 	});
-	const savedFilePath=await resizedResponse();
+	let savedFilePath=await resizedResponse();
 	console.log('saved',savedFilePath);
 
-	const data = fs.readFileSync(savedFilePath);
-	const resizedThumbnailData = data.toString('base64');
+	let data = fs.readFileSync(savedFilePath);
+	let resizedThumbnailData = data.toString('base64');
 	// console.log(resizedThumbnailData);
 
     let svgStr=`<svg fill="none" width="800" height="180" xmlns="http://www.w3.org/2000/svg">
