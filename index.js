@@ -30,7 +30,7 @@ app.get("/", (req, res) => {
 
 				      <pre>https://github-readme-medium-viewposts.vercel.app/api/medium/@<code>[username]</code>/<code>[index]</code></pre>
 
-				      <p>For instance, <a href='' target='_blank'>https://github-readme-medium.vercel.app/api/medium/@<mark>geek-cc</mark>/<mark>1</mark></a> shall retrieve the 2nd most recent post (since <code>0</code> refers most recent post so sequence of posts published follows ascending values of <code>index</code>).</p>
+				      <p>For instance, <a href='https://github-readme-medium-viewposts.vercel.app/api/medium/@geek-cc/1' target='_blank'>https://github-readme-medium.vercel.app/api/medium/@<mark>geek-cc</mark>/<mark>1</mark></a> shall retrieve the 2nd most recent post (since <code>0</code> refers most recent post so sequence of posts published follows ascending values of <code>index</code>).</p>
 
 				      <p class='lead'>Option 2: Get featured Medium posts (based on staff picks)</p>
 
