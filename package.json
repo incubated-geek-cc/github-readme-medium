@@ -12,6 +12,7 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "rss-to-json": "^2.1.1"
   }
 }

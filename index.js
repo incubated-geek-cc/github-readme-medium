@@ -7,11 +7,18 @@
 
 // app.use(cors());
 // app.use('/api', product);
-
+// image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
 // app.listen(port, () => console.log(`Listening on port ${port}`));
 // ---
 require("dotenv").config();
+
 const port = process.env.PORT || 3000;
+const myUsername = process.env.MY_USERNAME;
+const displayIndex = process.env.DISPLAY_INDEX;
+
+const nodeEnv=process.env.NODE_ENV;
+const devOrigin=process.env.DEV_ORIGIN;
+const prodOrigin=process.env.PROD_ORIGIN;
 
 const express=require("express");
 const app = express();
@@ -28,13 +35,13 @@ app.get("/", (req, res) => {
 
 				      <p class='lead'>Option 1: Specify <code>[username]</code> & <code>[index]</code></p>
 
-				      <pre>https://github-readme-medium-viewposts.vercel.app/api/medium/@<code>[username]</code>/<code>[index]</code></pre>
+				      <pre>${((nodeEnv=='development') ? devOrigin : prodOrigin)}/api/medium/@<code>[username]</code>/<code>[index]</code></pre>
 
-				      <p>For instance, <a href='https://github-readme-medium-viewposts.vercel.app/api/medium/@geek-cc/1' target='_blank'>https://github-readme-medium.vercel.app/api/medium/@<mark>geek-cc</mark>/<mark>1</mark></a> shall retrieve the 2nd most recent post (since <code>0</code> refers most recent post so sequence of posts published follows ascending values of <code>index</code>).</p>
+				      <p>For instance, <a href='${((nodeEnv=='development') ? devOrigin : prodOrigin)}/api/medium/@${myUsername}/${displayIndex}' target='_blank'>${((nodeEnv=='development') ? devOrigin : prodOrigin)}/api/medium/@<mark>${myUsername}</mark>/<mark>${displayIndex}</mark></a> shall retrieve the 2nd most recent post (since <code>0</code> refers most recent post so sequence of posts published follows ascending values of <code>index</code>).</p>
 
 				      <p class='lead'>Option 2: Get featured Medium posts (based on staff picks)</p>
 
-				      <pre><a href='https://github-readme-medium-viewposts.vercel.app/api/medium' target='_blank'>https://github-readme-medium-viewposts.vercel.app/api/medium</a></pre>
+				      <pre><a href='${((nodeEnv=='development') ? devOrigin : prodOrigin)}/api/medium' target='_blank'>${((nodeEnv=='development') ? devOrigin : prodOrigin)}/api/medium</a></pre>
 					</div>
 			    </div>
 			`);
