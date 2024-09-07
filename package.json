@@ -1,13 +1,26 @@
 {
   "name": "github-readme-medium",
   "version": "1.0.0",
-  "description": "A vercel api implementation to fetch latest medium posts.",
+  "description": "An API implemented using Vercel to fetch latest Medium posts via RSS feeds.",
   "main": "index.js",
   "scripts": {
     "start": "node ./index.js"
   },
-  "keywords": [],
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/incubated-geek-cc/github-readme-medium"
+  },
+  "keywords": [
+    "Medium",
+    "Express",
+    "Vercel",
+    "API",
+    "RSS"
+  ],
+  "author": {
+    "name": "Charmaine Chui",
+    "url": "https://geek-cc.medium.com/"
+  },
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.4.5",
