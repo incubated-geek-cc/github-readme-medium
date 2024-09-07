@@ -113,7 +113,10 @@ async function getArticle(post,articleIndex) {
 				</svg>`;
 
 	return new Promise(resolve => {
-      	resolve(svgStr);
+      	resolve({
+      		url: link,
+      		svgData: svgStr
+      	});
     });
 } 
 
@@ -151,6 +154,24 @@ router.get("/medium", async(req, res) => {
 });
 
 router.get("/medium/@:username/:index", async(req, res) => {
+	let prevHeader="";
+	let rawHeaders=req["rawHeaders"];
+	// console.log(rawHeaders);
+	let headersObj={};
+	for(let i=0;i<rawHeaders.length;i++) {
+		let rawHeader=rawHeaders[i].toLowerCase();
+		if(i==0 || i%2==0) {
+			headersObj[rawHeader]="";
+			prevHeader=rawHeader;
+		} else if(i%2!=0) {
+			headersObj[prevHeader]=rawHeader;
+		}
+	}
+	// console.log(headersObj);
+	const dest = headersObj["sec-fetch-dest"];
+  	const accept = headersObj["accept"];
+  	const isImage = dest ? dest === "image" : !/text\/html/.test(accept);
+
 	let params=req.params;
 
 	let articleIndex=parseInt(params["index"]);
@@ -162,13 +183,19 @@ router.get("/medium/@:username/:index", async(req, res) => {
   	// {"type":"error","message":"Client network socket disconnected before secure TLS connection was established"}
   	try {
 		const data = await parse(RSSUrl);
-		// console.log(data);
 		const posts=data["items"];
 	    const post=posts[articleIndex];
 	    
-	    const svgStr=await getArticle(post,articleIndex);
-	    res.set("Content-Type", "image/svg+xml");
-	    res.status(200).send(svgStr);
+	    const svgData=await getArticle(post,articleIndex);
+	    let svgContent=svgData["svgData"];
+	    let url=svgData["url"];
+
+  		if (isImage) {
+		    res.set("Content-Type", "image/svg+xml");
+		    res.status(200).send(svgContent);
+	    }
+	    // Redirect to the URL if not an image request
+  		res.redirect(301, url);
 	} catch(_err) {
 		console.error(_err);
 		res.status(500).json({
