@@ -148,7 +148,7 @@ router.get("/medium", async(req, res) => {
 	}
 });
 
-router.get("/medium/@:username/:index/_image", async(req, res) => {
+router.get("/medium/@:username/:index", async(req, res) => {
 	let params=req.params;
 
 	let articleIndex=parseInt(params["index"]);
@@ -176,22 +176,22 @@ router.get("/medium/@:username/:index/_image", async(req, res) => {
 	}
 });
 
-router.get("/medium/@:username/:index", (req, res) => {
-	let params=req.params;
+// router.get("/medium/@:username/:index/_image", (req, res) => {
+// 	let params=req.params;
 
-	let articleIndex=parseInt(params["index"]);
-	let username=params["username"];
-	let svgURL=`${((nodeEnv=='development') ? devOrigin : prodOrigin)}/api/medium/@${username}/${articleIndex}/_image`;
+// 	let articleIndex=parseInt(params["index"]);
+// 	let username=params["username"];
+// 	let svgURL=`${((nodeEnv=='development') ? devOrigin : prodOrigin)}/api/medium/@${username}/${articleIndex}/_image`;
 
-	request.get({url: svgURL}, (_err, _res, _body) => {
-		if (_err) {
-			console.error(_err);
-	    	res.status(500).json({
-		    	type: "error", 
-		    	message: (_err !== null && typeof _err.message !== "undefined") ? _err.message : "Error. Unable to retrieve data."
-		  	});
-		}
-	}).pipe(res);
-});
+// 	request.get({url: svgURL}, (_err, _res, _body) => {
+// 		if (_err) {
+// 			console.error(_err);
+// 	    	res.status(500).json({
+// 		    	type: "error", 
+// 		    	message: (_err !== null && typeof _err.message !== "undefined") ? _err.message : "Error. Unable to retrieve data."
+// 		  	});
+// 		}
+// 	}).pipe(res);
+// });
 
 module.exports = router;
