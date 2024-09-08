@@ -26,8 +26,7 @@ To display your recent published article from Medium on README.md, import link i
 </div>
  
 ### ✍ Read related post here
-* -- (WIP) --
-<!-- [**Article :: How To Extract Embedded Fonts From A PDF As Valid Font Files In Java**](https://geek-cc.medium.com/how-to-extract-embedded-fonts-from-a-pdf-as-valid-font-files-in-java-1d202fa06f4e) -->
+[**Article :: How To Display Your Latest Medium Posts On GitHub Profile README**](#)
 
 ### 👀 Preview
 
