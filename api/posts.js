@@ -5,7 +5,7 @@ const devOrigin=process.env.DEV_ORIGIN;
 const prodOrigin=process.env.PROD_ORIGIN;
 
 const month = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const formatPubDate = ((d) => `${(d.getDate() < 10) ? ("0"+d.getDate()) : d.getDate()} ${month[d.getMonth()]} ${d.getFullYear()}, ${(d.getHours() < 10) ? ("0"+d.getHours()) : d.getHours()}:${(d.getMinutes() < 10) ? ("0"+d.getMinutes()) : d.getMinutes()}`);
+const formatDate = ((d) => `${(d.getDate() < 10) ? ("0"+d.getDate()) : d.getDate()} ${month[d.getMonth()]} ${d.getFullYear()}, ${(d.getHours() < 10) ? ("0"+d.getHours()) : d.getHours()}:${(d.getMinutes() < 10) ? ("0"+d.getMinutes()) : d.getMinutes()}`);
 
 const request = require("request").defaults({ encoding: null });
 const path = require("path");
@@ -22,7 +22,7 @@ async function getArticle(post,articleIndex) {
 
     let pubDate=post["published"];
     let d = new Date(pubDate);
-    let displayPubDate=formatPubDate(d);
+    let displayPubDate=formatDate(d);
 
     let link=post["link"];
     let author=post["author"];
@@ -99,7 +99,7 @@ async function getArticle(post,articleIndex) {
 // a middleware function with no mount path.
 // code is executed for every request to the router
 router.use((req, res, next) => {
-  console.log('Time:', formatPubDate(new Date(Date.now())));
+  console.log('Time:', formatDate(new Date(Date.now())));
   console.log('Request Type:', req.method);
   next();
 });
@@ -117,7 +117,7 @@ router.use('/medium/@:username/:index', async(req, res, next) => {
 	const post=posts[articleIndex];
 
     const svgData=await getArticle(post,articleIndex);
-    console.log(['svgData',svgData]);
+    // console.log(['svgData',svgData]);
     req.body.svgData = svgData;
 
     // pass control to the next middleware function in this stack
@@ -139,7 +139,7 @@ router.get('/medium/@:username/:index', (req, res, next) => {
 			headersObj[prevHeader]=rawHeader;
 		}
 	}
-	console.log(headersObj);
+	// console.log(headersObj);
 
 	const dest = headersObj["sec-fetch-dest"];
   	const accept = headersObj["accept"];
@@ -149,7 +149,7 @@ router.get('/medium/@:username/:index', (req, res, next) => {
 
     if(isImage) { // if is image, end reponse here
     	let svgContent=svgData["svgData"];
-    	console.log(['isImage|svgContent',svgContent]);
+    	// console.log(['isImage|svgContent',svgContent]);
     	res.set("Content-Type", "image/svg+xml");
 		res.status(200).send(svgContent);
     } else { // pass control to the next middleware function in this stack
@@ -157,22 +157,12 @@ router.get('/medium/@:username/:index', (req, res, next) => {
     }
 }, (req, res) => {
 	let svgData=req.body.svgData;
-	console.log(['!isImage',svgData]);
+	// console.log(['!isImage',svgData]);
 	// Redirect to the URL if not an image request
   	let url=svgData["url"];
 	res.redirect(301, url);
 	res.end();
 });
-
-
-// router.get('/medium/@:username/:index', (req, res) => {
-// 	let svgData=req.body.svgData;
-// 	console.log(['isImage',svgData]);
-// 	let svgContent=svgData["svgData"];
-
-// 	res.set("Content-Type", "image/svg+xml");
-// 	res.status(200).send(svgContent);
-// });
 
 router.get("/medium", async(req, res) => {
 	let username="MediumStaff";
@@ -186,7 +176,7 @@ router.get("/medium", async(req, res) => {
 	    for(var post of posts) {
 	    	let pubDate = post["published"];
 	    	const d = new Date(pubDate);
-    		let displayPubDate=formatPubDate(d);
+    		let displayPubDate=formatDate(d);
 	    	var obj={
 	    		"title": post["title"],
 				"pubDate": displayPubDate,
@@ -206,75 +196,5 @@ router.get("/medium", async(req, res) => {
 	  	});
 	}
 });
-
-// router.get("/medium/@:username/:index", async(req, res) => {
-// 	let prevHeader="";
-// 	let rawHeaders=req["rawHeaders"];
-// 	// console.log(rawHeaders);
-// 	let headersObj={};
-// 	for(let i=0;i<rawHeaders.length;i++) {
-// 		let rawHeader=rawHeaders[i].toLowerCase();
-// 		if(i==0 || i%2==0) {
-// 			headersObj[rawHeader]="";
-// 			prevHeader=rawHeader;
-// 		} else if(i%2!=0) {
-// 			headersObj[prevHeader]=rawHeader;
-// 		}
-// 	}
-// 	// console.log(headersObj);
-// 	const dest = headersObj["sec-fetch-dest"];
-//   	const accept = headersObj["accept"];
-//   	const isImage = dest ? dest === "image" : !/text\/html/.test(accept);
-
-// 	let params=req.params;
-
-// 	let articleIndex=parseInt(params["index"]);
-// 	let username=params["username"];
-// 	let RSSUrl=`https://medium.com/feed/@${username}`;
-//   	// console.log(`https://api.rss2json.com/v1/api.json?rss_url=${RSSUrl}`);
-//   	// https://api.rss2json.com/v1/api.json?rss_url=https://medium.com/feed/@MediumStaff
-//   	// {"type":"error","message":"getaddrinfo ENOTFOUND api.rss2json.com"}
-//   	// {"type":"error","message":"Client network socket disconnected before secure TLS connection was established"}
-//   	try {
-// 		const data = await parse(RSSUrl);
-// 		const posts=data["items"];
-// 	    const post=posts[articleIndex];
-	    
-// 	    const svgData=await getArticle(post,articleIndex);
-// 	    let svgContent=svgData["svgData"];
-// 	    let url=svgData["url"];
-
-//   		if (isImage) {
-// 		    res.set("Content-Type", "image/svg+xml");
-// 		    res.status(200).send(svgContent);
-// 	    }
-// 	    // Redirect to the URL if not an image request
-//   		res.redirect(301, url);
-// 	} catch(_err) {
-// 		console.error(_err);
-// 		res.status(500).json({
-// 	    	type: "error", 
-// 	    	message: (_err !== null && typeof _err.message !== "undefined") ? _err.message : "Error. Unable to retrieve data."
-// 	  	});
-// 	}
-// });
-
-// router.get("/medium/@:username/:index/_image", (req, res) => {
-// 	let params=req.params;
-
-// 	let articleIndex=parseInt(params["index"]);
-// 	let username=params["username"];
-// 	let svgURL=`${((nodeEnv=='development') ? devOrigin : prodOrigin)}/api/medium/@${username}/${articleIndex}/_image`;
-
-// 	request.get({url: svgURL}, (_err, _res, _body) => {
-// 		if (_err) {
-// 			console.error(_err);
-// 	    	res.status(500).json({
-// 		    	type: "error", 
-// 		    	message: (_err !== null && typeof _err.message !== "undefined") ? _err.message : "Error. Unable to retrieve data."
-// 		  	});
-// 		}
-// 	}).pipe(res);
-// });
 
 module.exports = router;
