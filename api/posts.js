@@ -4,6 +4,9 @@ const nodeEnv=process.env.NODE_ENV;
 const devOrigin=process.env.DEV_ORIGIN;
 const prodOrigin=process.env.PROD_ORIGIN;
 
+const month = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const formatPubDate = ((d) => `${(d.getDate() < 10) ? ("0"+d.getDate()) : d.getDate()} ${month[d.getMonth()]} ${d.getFullYear()}, ${(d.getHours() < 10) ? ("0"+d.getHours()) : d.getHours()}:${(d.getMinutes() < 10) ? ("0"+d.getMinutes()) : d.getMinutes()}`);
+
 const request = require("request").defaults({ encoding: null });
 const path = require("path");
 const fs = require("fs");
@@ -11,33 +14,8 @@ const { parse } = require("rss-to-json");
 
 const express = require('express');
 const router = express.Router();
-router.use(express.json({ extended: false }));
-
-const month = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const formatPubDate = ((d) => `${(d.getDate() < 10) ? ("0"+d.getDate()) : d.getDate()} ${month[d.getMonth()]} ${d.getFullYear()}, ${(d.getHours() < 10) ? ("0"+d.getHours()) : d.getHours()}:${(d.getMinutes() < 10) ? ("0"+d.getMinutes()) : d.getMinutes()}`);
-
-/*
-let data = 'stackabuse.com';
-let buff = new Buffer(data);
-let base64data = buff.toString('base64');
-
-console.log('"' + data + '" converted to Base64 is "' + base64data + '"');
-// "stackabuse.com" converted to Base64 is "c3RhY2thYnVzZS5jb20="
-
-let data = 'c3RhY2thYnVzZS5jb20=';
-let buff = new Buffer(data, 'base64');
-let text = buff.toString('utf8');
-
-console.log('"' + data + '" converted from Base64 to UTF-8 is "' + text + '"');
-*/
-// console.log(['utf8',Buffer.from(_body, 'utf8').toString('base64')]);
-// console.log(['hex',Buffer.from(_body, 'hex').toString('base64')]);
-// console.log(['utf16le',Buffer.from(_body, 'utf16le').toString('base64')]);
-// console.log(['ucs2',Buffer.from(_body, 'ucs2').toString('base64')]);
-// console.log(['base64',Buffer.from(_body, 'base64').toString('base64')]);
-// console.log(['ascii',Buffer.from(_body, 'ascii').toString('base64')]);
-// console.log(['latin1',Buffer.from(_body, 'latin1').toString('base64')]);
-// console.log(['binary',Buffer.from(_body, 'binary').toString('base64')]);
+router.use(express.json()); // for parsing application/json
+router.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
 async function getArticle(post,articleIndex) {
   	let title=post["title"];
@@ -96,18 +74,16 @@ async function getArticle(post,articleIndex) {
 					<foreignObject width="100%" height="100%">
 						<div xmlns="http://www.w3.org/1999/xhtml">
 							<style type="text/css">*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}@keyframes gradientBackground{0%{background-position-x:0%}100%{background-position-x:100%}}.flex{display:flex;align-items:center}.outer-container{height:180px}.container{height:178px;border:1px solid rgb(0 0 0 / .2);padding:20px 30px;margin:20px;border-radius:10px;background:#fff;background:linear-gradient(60deg,rgb(255 255 255) 0%,rgb(255 255 255) 47%,rgb(246 246 246) 50%,rgb(255 255 255) 53%,rgb(255 255 255) 100%);background-size:600% 400%;animation:gradientBackground 3s ease infinite;overflow:hidden;text-overflow:ellipsis}img{margin-right:10px;width:225px;height:100%;object-fit:cover}.right{flex:1}a{text-decoration:none;color:inherit}p{line-height:1.5;color:#555}h3{color:#333}small{color:#888;display:block;margin-top:5px;margin-bottom:8px}</style>
-							<a href="${link}" target="_blank">
-								<div class="outer-container flex">
-									<a class="container flex" href="${link}" target="_blank">
-										<img src="${resizedThumbnailData}"/>
-					                  	<div class="right">
-					                    	<h3>${title}</h3>
-					                    	<small>${displayPubDate}</small>
-					                    	<p>${subtitle}</p>
-					                  	</div>
-					              	</a>
-					          	</div>
-				          	</a>
+							<div class="outer-container flex">
+								<a class="container flex" href="${link}" target="_blank">
+									<img src="${resizedThumbnailData}"/>
+				                  	<div class="right">
+				                    	<h3>${title}</h3>
+				                    	<small>${displayPubDate}</small>
+				                    	<p>${subtitle}</p>
+				                  	</div>
+				              	</a>
+				          	</div>
 				      	</div>
 					</foreignObject>
 				</svg>`;
@@ -119,6 +95,84 @@ async function getArticle(post,articleIndex) {
       	});
     });
 } 
+
+// a middleware function with no mount path.
+// code is executed for every request to the router
+router.use((req, res, next) => {
+  console.log('Time:', formatPubDate(new Date(Date.now())));
+  console.log('Request Type:', req.method);
+  next();
+});
+
+// a middleware sub-stack shows request info for any type of HTTP request to the /medium/@:username/:index path
+router.use('/medium/@:username/:index', async(req, res, next) => {
+	let params=req.params;
+
+    let articleIndex=parseInt(params["index"]);
+	let username=params["username"];
+
+	let RSSUrl=`https://medium.com/feed/@${username}`;
+	const data = await parse(RSSUrl);
+	const posts=data["items"];
+	const post=posts[articleIndex];
+
+    const svgData=await getArticle(post,articleIndex);
+    console.log(['svgData',svgData]);
+    req.body.svgData = svgData;
+
+    // pass control to the next middleware function in this stack
+    next();
+});
+
+// a middleware sub-stack that handles GET requests to the /medium/@:username/:index path
+router.get('/medium/@:username/:index', (req, res, next) => {
+	let prevHeader="";
+	let rawHeaders=req["rawHeaders"];
+	// console.log(rawHeaders);
+	let headersObj={};
+	for(let i=0;i<rawHeaders.length;i++) {
+		let rawHeader=rawHeaders[i].toLowerCase();
+		if(i==0 || i%2==0) {
+			headersObj[rawHeader]="";
+			prevHeader=rawHeader;
+		} else if(i%2!=0) {
+			headersObj[prevHeader]=rawHeader;
+		}
+	}
+	console.log(headersObj);
+
+	const dest = headersObj["sec-fetch-dest"];
+  	const accept = headersObj["accept"];
+  	const isImage = dest ? dest === "image" : !/text\/html/.test(accept);
+    
+    let svgData=req.body.svgData;
+
+    if(isImage) { // if is image, end reponse here
+    	let svgContent=svgData["svgData"];
+    	console.log(['isImage|svgContent',svgContent]);
+    	res.set("Content-Type", "image/svg+xml");
+		res.status(200).send(svgContent);
+    } else { // pass control to the next middleware function in this stack
+    	next();
+    }
+}, (req, res) => {
+	let svgData=req.body.svgData;
+	console.log(['!isImage',svgData]);
+	// Redirect to the URL if not an image request
+  	let url=svgData["url"];
+	res.redirect(301, url);
+	res.end();
+});
+
+
+// router.get('/medium/@:username/:index', (req, res) => {
+// 	let svgData=req.body.svgData;
+// 	console.log(['isImage',svgData]);
+// 	let svgContent=svgData["svgData"];
+
+// 	res.set("Content-Type", "image/svg+xml");
+// 	res.status(200).send(svgContent);
+// });
 
 router.get("/medium", async(req, res) => {
 	let username="MediumStaff";
@@ -153,57 +207,57 @@ router.get("/medium", async(req, res) => {
 	}
 });
 
-router.get("/medium/@:username/:index", async(req, res) => {
-	let prevHeader="";
-	let rawHeaders=req["rawHeaders"];
-	// console.log(rawHeaders);
-	let headersObj={};
-	for(let i=0;i<rawHeaders.length;i++) {
-		let rawHeader=rawHeaders[i].toLowerCase();
-		if(i==0 || i%2==0) {
-			headersObj[rawHeader]="";
-			prevHeader=rawHeader;
-		} else if(i%2!=0) {
-			headersObj[prevHeader]=rawHeader;
-		}
-	}
-	// console.log(headersObj);
-	const dest = headersObj["sec-fetch-dest"];
-  	const accept = headersObj["accept"];
-  	const isImage = dest ? dest === "image" : !/text\/html/.test(accept);
+// router.get("/medium/@:username/:index", async(req, res) => {
+// 	let prevHeader="";
+// 	let rawHeaders=req["rawHeaders"];
+// 	// console.log(rawHeaders);
+// 	let headersObj={};
+// 	for(let i=0;i<rawHeaders.length;i++) {
+// 		let rawHeader=rawHeaders[i].toLowerCase();
+// 		if(i==0 || i%2==0) {
+// 			headersObj[rawHeader]="";
+// 			prevHeader=rawHeader;
+// 		} else if(i%2!=0) {
+// 			headersObj[prevHeader]=rawHeader;
+// 		}
+// 	}
+// 	// console.log(headersObj);
+// 	const dest = headersObj["sec-fetch-dest"];
+//   	const accept = headersObj["accept"];
+//   	const isImage = dest ? dest === "image" : !/text\/html/.test(accept);
 
-	let params=req.params;
+// 	let params=req.params;
 
-	let articleIndex=parseInt(params["index"]);
-	let username=params["username"];
-	let RSSUrl=`https://medium.com/feed/@${username}`;
-  	// console.log(`https://api.rss2json.com/v1/api.json?rss_url=${RSSUrl}`);
-  	// https://api.rss2json.com/v1/api.json?rss_url=https://medium.com/feed/@MediumStaff
-  	// {"type":"error","message":"getaddrinfo ENOTFOUND api.rss2json.com"}
-  	// {"type":"error","message":"Client network socket disconnected before secure TLS connection was established"}
-  	try {
-		const data = await parse(RSSUrl);
-		const posts=data["items"];
-	    const post=posts[articleIndex];
+// 	let articleIndex=parseInt(params["index"]);
+// 	let username=params["username"];
+// 	let RSSUrl=`https://medium.com/feed/@${username}`;
+//   	// console.log(`https://api.rss2json.com/v1/api.json?rss_url=${RSSUrl}`);
+//   	// https://api.rss2json.com/v1/api.json?rss_url=https://medium.com/feed/@MediumStaff
+//   	// {"type":"error","message":"getaddrinfo ENOTFOUND api.rss2json.com"}
+//   	// {"type":"error","message":"Client network socket disconnected before secure TLS connection was established"}
+//   	try {
+// 		const data = await parse(RSSUrl);
+// 		const posts=data["items"];
+// 	    const post=posts[articleIndex];
 	    
-	    const svgData=await getArticle(post,articleIndex);
-	    let svgContent=svgData["svgData"];
-	    let url=svgData["url"];
+// 	    const svgData=await getArticle(post,articleIndex);
+// 	    let svgContent=svgData["svgData"];
+// 	    let url=svgData["url"];
 
-  		if (isImage) {
-		    res.set("Content-Type", "image/svg+xml");
-		    res.status(200).send(svgContent);
-	    }
-	    // Redirect to the URL if not an image request
-  		res.redirect(301, url);
-	} catch(_err) {
-		console.error(_err);
-		res.status(500).json({
-	    	type: "error", 
-	    	message: (_err !== null && typeof _err.message !== "undefined") ? _err.message : "Error. Unable to retrieve data."
-	  	});
-	}
-});
+//   		if (isImage) {
+// 		    res.set("Content-Type", "image/svg+xml");
+// 		    res.status(200).send(svgContent);
+// 	    }
+// 	    // Redirect to the URL if not an image request
+//   		res.redirect(301, url);
+// 	} catch(_err) {
+// 		console.error(_err);
+// 		res.status(500).json({
+// 	    	type: "error", 
+// 	    	message: (_err !== null && typeof _err.message !== "undefined") ? _err.message : "Error. Unable to retrieve data."
+// 	  	});
+// 	}
+// });
 
 // router.get("/medium/@:username/:index/_image", (req, res) => {
 // 	let params=req.params;
