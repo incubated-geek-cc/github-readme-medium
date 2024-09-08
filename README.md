@@ -26,7 +26,7 @@ To display your recent published article from Medium on README.md, import link i
 </div>
  
 ### ✍ Read related post here
-[**Article :: How To Display Your Latest Medium Posts On GitHub Profile README**](#)
+[**Article :: How To Display Your Latest Medium Posts On GitHub Profile README**](https://geek-cc.medium.com/how-to-display-your-latest-medium-posts-on-github-profile-readme-8533b4d26980)
 
 ### 👀 Preview
 
